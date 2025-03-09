@@ -1,0 +1,3 @@
+{
+    "connectionString": "mongodb+srv://UipsUser:UipsPassword@inventory.4voyv.mongodb.net/?retryWrites=true&w=majority&appName=Inventory"
+}
