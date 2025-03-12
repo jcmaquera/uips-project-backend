@@ -312,11 +312,15 @@ app.post("/checkout", authenticateToken, async (req, res) => {
 
   // Validation checks
   if (!checkoutNumber) {
-    return res.status(400).json({ error: true, message: "Checkout number is required" });
+    return res
+      .status(400)
+      .json({ error: true, message: "Checkout number is required" });
   }
 
   if (!checkoutDate) {
-    return res.status(400).json({ error: true, message: "Checkout date is required" });
+    return res
+      .status(400)
+      .json({ error: true, message: "Checkout date is required" });
   }
 
   if (!items || items.length === 0) {
@@ -390,6 +394,83 @@ app.get("/get-inventory", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error fetching inventory data" });
+  }
+});
+
+//Generate Delivery Report
+app.post("/generate-report-with-delivery-number", async (req, res) => {
+  const { startDate, endDate } = req.body;
+
+  if (!startDate || !endDate) {
+    return res
+      .status(400)
+      .json({ error: true, message: "Start and End dates are required" });
+  }
+
+  try {
+    // Convert input dates to JavaScript Date objects
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // Ensure the end date includes the full day (23:59:59)
+    end.setHours(23, 59, 59, 999);
+
+    // Find deliveries using `createdAt` only
+    const deliveries = await Delivery.find({
+      createdAt: { $gte: start, $lte: end },
+    })
+      .populate("items.item", "itemType itemDesc sizeSource serialNo") // Populate item details
+      .sort({ createdAt: -1 }); // Sort by newest first
+
+    return res.json({
+      error: false,
+      message: "Report generated successfully",
+      deliveries,
+    });
+  } catch (error) {
+    console.error("Error fetching report:", error);
+    return res
+      .status(500)
+      .json({ error: true, message: "Failed to generate report" });
+  }
+});
+
+//Generate Invoice Report
+app.post("/generate-report-with-invoice-number", async (req, res) => {
+  const { startDate, endDate } = req.body;
+
+  if (!startDate || !endDate) {
+    return res
+      .status(400)
+      .json({ error: true, message: "Start and End dates are required" });
+  }
+
+  try {
+    // Convert input dates to JavaScript Date objects
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // Ensure the end date includes the full day (23:59:59)
+    end.setHours(23, 59, 59, 999);
+
+    // Find checkouts created within the date range
+    const checkouts = await Checkout.find({
+      checkoutDate: { $gte: start, $lte: end }, // Filter by the date range
+    })
+      .populate("items.item", "itemType itemDesc sizeSource serialNo") // Populate item details
+      .sort({ checkoutDate: -1 }); // Sort by checkout date (newest first)
+
+    return res.json({
+      error: false,
+      message: "Report generated successfully",
+      checkouts,
+    });
+  } catch (error) {
+    console.error("Error fetching report:", error);
+    return res.status(500).json({
+      error: true,
+      message: "Failed to generate report",
+    });
   }
 });
 
