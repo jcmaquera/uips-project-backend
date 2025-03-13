@@ -474,7 +474,6 @@ app.post("/generate-report-with-invoice-number", async (req, res) => {
   }
 });
 
-
 app.listen(8000);
 
 module.exports = app;
