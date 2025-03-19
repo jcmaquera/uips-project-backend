@@ -508,6 +508,28 @@ app.get("/check-delivery-existence/:deliveryNumber", async (req, res) => {
   }
 });
 
+// Check if Checkout Number Exists
+app.get("/check-checkout-number/:checkoutNumber", async (req, res) => {
+  const { checkoutNumber } = req.params;
+
+  try {
+    // Query to check if the checkout number already exists
+    const existingCheckout = await Checkout.findOne({ checkoutNumber });
+
+    if (existingCheckout) {
+      // If checkout number exists, return { exists: true }
+      return res.json({ exists: true });
+    }
+
+    // If no matching checkout number is found, return { exists: false }
+    return res.json({ exists: false });
+  } catch (error) {
+    console.error("Error checking checkout number:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 
 app.listen(8000);
 
