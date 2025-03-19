@@ -474,6 +474,41 @@ app.post("/generate-report-with-invoice-number", async (req, res) => {
   }
 });
 
+// Check if a Delivery Number Exists
+app.get("/check-delivery-existence/:deliveryNumber", async (req, res) => {
+  const { deliveryNumber } = req.params;
+
+  if (!deliveryNumber) {
+    return res.status(400).json({
+      error: true,
+      message: "Delivery number is required",
+    });
+  }
+
+  try {
+    const existingDelivery = await Delivery.findOne({ deliveryNumber });
+
+    if (existingDelivery) {
+      return res.json({
+        exists: true,
+        message: "Delivery number already exists",
+      });
+    } else {
+      return res.json({
+        exists: false,
+        message: "Delivery number does not exist",
+      });
+    }
+  } catch (error) {
+    console.error("Error checking delivery existence:", error);
+    return res.status(500).json({
+      error: true,
+      message: "Error checking delivery existence",
+    });
+  }
+});
+
+
 app.listen(8000);
 
 module.exports = app;
