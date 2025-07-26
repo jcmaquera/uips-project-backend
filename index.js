@@ -422,10 +422,16 @@ app.post("/generate-report-with-delivery-number", async (req, res) => {
       .populate("items.item", "itemType itemDesc sizeSource serialNo") // Populate item details
       .sort({ createdAt: -1 }); // Sort by newest first
 
+    // Clean up deliveries by removing any items with null `item`
+    const cleanedDeliveries = deliveries.map((delivery) => {
+      const filteredItems = delivery.items.filter((i) => i.item !== null);
+      return { ...delivery.toObject(), items: filteredItems };
+    });
+
     return res.json({
       error: false,
       message: "Report generated successfully",
-      deliveries,
+      deliveries: cleanedDeliveries,
     });
   } catch (error) {
     console.error("Error fetching report:", error);
@@ -460,10 +466,16 @@ app.post("/generate-report-with-invoice-number", async (req, res) => {
       .populate("items.item", "itemType itemDesc sizeSource serialNo") // Populate item details
       .sort({ checkoutDate: -1 }); // Sort by checkout date (newest first)
 
+    // Clean up checkouts by removing any items with null `item`
+    const cleanedCheckouts = checkouts.map((checkout) => {
+      const filteredItems = checkout.items.filter((i) => i.item !== null);
+      return { ...checkout.toObject(), items: filteredItems };
+    });
+
     return res.json({
       error: false,
       message: "Report generated successfully",
-      checkouts,
+      checkouts: cleanedCheckouts,
     });
   } catch (error) {
     console.error("Error fetching report:", error);
@@ -546,14 +558,17 @@ app.delete("/delete-item/:id", async (req, res) => {
     // Delete the item itself
     await Item.deleteOne({ _id: id });
 
-    return res.json({ error: false, message: "Item and inventory entry deleted successfully" });
+    return res.json({
+      error: false,
+      message: "Item and inventory entry deleted successfully",
+    });
   } catch (err) {
     console.error("Error deleting item:", err);
-    return res.status(500).json({ error: true, message: "Failed to delete item" });
+    return res
+      .status(500)
+      .json({ error: true, message: "Failed to delete item" });
   }
 });
-
-
 
 app.listen(8000);
 
