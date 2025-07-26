@@ -529,6 +529,30 @@ app.get("/check-checkout-number/:checkoutNumber", async (req, res) => {
   }
 });
 
+// Delete Item
+app.delete("/delete-item/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Find the item first
+    const item = await Item.findById(id);
+    if (!item) {
+      return res.status(404).json({ error: true, message: "Item not found" });
+    }
+
+    // Delete inventory record(s) linked to this item
+    await Inventory.deleteOne({ item: id });
+
+    // Delete the item itself
+    await Item.deleteOne({ _id: id });
+
+    return res.json({ error: false, message: "Item and inventory entry deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting item:", err);
+    return res.status(500).json({ error: true, message: "Failed to delete item" });
+  }
+});
+
 
 
 app.listen(8000);
